@@ -15,6 +15,7 @@ class Palette {
 public:
     struct Entry {
         std::vector<RectNode*> nodes;
+        bool        filled;
         uint32_t    x;
         uint32_t    y;
         uint8_t     r;
@@ -22,8 +23,10 @@ public:
         uint8_t     b;
 
         Entry(uint32_t x = 0, uint32_t y = 0) :
-            x(x), y(y), r(0), g(0), b(0) {}
+            filled(false), x(x), y(y), r(0), g(0), b(0) {}
     };
+
+    using Rnd = std::default_random_engine;
 
     Palette(void);
     ~Palette(void);
@@ -35,12 +38,15 @@ public:
 
     void addColor(uint8_t r, uint8_t g, uint8_t b);
 
+    void writeNodesCountImg(void) const;
+    void writeImg(void) const;
+
     static double  rGlobal;
     static double  gGlobal;
     static double  bGlobal;
 
 private:
-    std::default_random_engine  _r;
+    Rnd                 _r;
     std::vector<Entry>  _data;
     RectNode*           _root;
 
