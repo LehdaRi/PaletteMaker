@@ -9,45 +9,54 @@
 #include "Palette.hpp"
 
 
-template <typename D>
 class NodeBase {
 public:
+    virtual ~NodeBase() {};
+};
+
+template <typename D>
+class Node : public NodeBase {
+public:
     friend D;
+    friend class Palette;
 
-    NodeBase(NodeBase<D>* parent);
+    Node(Node<D>* parent);
 
-    NodeBase(const NodeBase<D>&)     = delete;
-    NodeBase(NodeBase<D>&&)          = delete;
-    NodeBase<D>& operator=(const NodeBase<D>&)  = delete;
-    NodeBase<D>& operator=(NodeBase<D>&&)       = delete;
-    virtual ~NodeBase(void) = default;
+    Node(const Node<D>&)     = delete;
+    Node(Node<D>&&)          = delete;
+    Node<D>& operator=(const Node<D>&)  = delete;
+    Node<D>& operator=(Node<D>&&)       = delete;
+    virtual ~Node(void) = default;
 
-    NodeBase<D>& addChild(void);
+    Node<D>& addChild(void);
+    void addChildrenPostProcess(void);
     void addEntry(Palette::Entry& entry);
+
     void getColor(double& r, double& g, double& b);
 
     void findPosForColor(uint32_t& x, uint32_t& y,
                          uint8_t r, uint8_t g, uint8_t b,
                          const std::vector<Palette::Entry>& data,
-                         Palette::Rnd rnd);
+                         Palette::Rnd& rnd);
 
 protected:
-    NodeBase<D>*    _parent;
+    Node<D>*        _parent;
     uint64_t        _nFreeEntries;
     uint64_t        _nTotalEntries;
     uint64_t        _r;
     uint64_t        _g;
     uint64_t        _b;
 
-    std::vector<std::unique_ptr<NodeBase<D>>>   _children;
+    std::vector<std::unique_ptr<Node<D>>>   _children;
 };
 
-class RectNode : public NodeBase<RectNode> {
+class RectNode : public Node<RectNode> {
 public:
-    RectNode(NodeBase<RectNode>* parent,
+    RectNode(Node<RectNode>* parent,
              uint32_t x, uint32_t y, uint32_t w, uint32_t h);
 
     RectNode& addChild(uint32_t x, uint32_t y, uint32_t w, uint32_t h);
+    void addChildrenPostProcess(void) {}
     bool checkAddEntry(Palette::Entry& entry);
 
     void getSpec(uint32_t& x, uint32_t& y, uint32_t& w, uint32_t& h) const;
@@ -55,7 +64,7 @@ public:
     void findPosForColor(uint32_t& x, uint32_t& y,
                          uint8_t r, uint8_t g, uint8_t b,
                          const std::vector<Palette::Entry>& data,
-                         Palette::Rnd rnd);
+                         Palette::Rnd& rnd);
 
 protected:
     uint32_t    _x;
@@ -66,7 +75,7 @@ protected:
 
 
 template <typename D>
-NodeBase<D>::NodeBase(NodeBase<D>* parent) :
+Node<D>::Node(Node<D>* parent) :
     _parent         (parent),
     _nFreeEntries   (0),
     _nTotalEntries  (0),
@@ -76,14 +85,40 @@ NodeBase<D>::NodeBase(NodeBase<D>* parent) :
 {
 }
 
+class CircleNode : public Node<CircleNode> {
+public:
+    CircleNode(Node<CircleNode>* parent,
+               float x, float y, float rad);
+
+    CircleNode& addChild(float x, float y, float rad);
+    void addChildrenPostProcess(void);
+    bool checkAddEntry(Palette::Entry& entry);
+
+    void getSpec(float& x, float& y, float& rad) const;
+
+    void findPosForColor(uint32_t& x, uint32_t& y,
+                         uint8_t r, uint8_t g, uint8_t b,
+                         const std::vector<Palette::Entry>& data,
+                         Palette::Rnd& rnd);
+
+protected:
+    float   _x;
+    float   _y;
+    float   _rad;
+
+    float   _radSqr;
+    int     _yfill;
+};
+
+
 template <typename D>
-NodeBase<D>& NodeBase<D>::addChild(void) {
+Node<D>& Node<D>::addChild(void) {
     _children.push_back(std::make_unique(this));
     return *_children.back();
 }
 
 template <typename D>
-void NodeBase<D>::addEntry(Palette::Entry& entry) {
+void Node<D>::addEntry(Palette::Entry& entry) {
     if (static_cast<D*>(this)->checkAddEntry(entry)) {
         ++_nFreeEntries;
         ++_nTotalEntries;
@@ -94,17 +129,22 @@ void NodeBase<D>::addEntry(Palette::Entry& entry) {
 }
 
 template <typename D>
-void NodeBase<D>::getColor(double& r, double& g, double& b) {
+void Node<D>::addChildrenPostProcess(void) {
+    static_cast<D*>(this)->addChildrenPostProcess();
+}
+
+template <typename D>
+void Node<D>::getColor(double& r, double& g, double& b) {
     r = (_nFreeEntries*Palette::rGlobal + _r)/_nTotalEntries;
     g = (_nFreeEntries*Palette::gGlobal + _g)/_nTotalEntries;
     b = (_nFreeEntries*Palette::bGlobal + _b)/_nTotalEntries;
 }
 
 template <typename D>
-void NodeBase<D>::findPosForColor(uint32_t& x, uint32_t& y,
+void Node<D>::findPosForColor(uint32_t& x, uint32_t& y,
                                   uint8_t r, uint8_t g, uint8_t b,
                                   const std::vector<Palette::Entry>& data,
-                                  Palette::Rnd rnd) {
+                                  Palette::Rnd& rnd) {
     static_cast<D*>(this)->findPosForColor(x, y, r, g, b, data, rnd);
 }
 

@@ -8,13 +8,16 @@
 #include <random>
 
 
-class RectNode;
+class NodeBase;
 
 
 class Palette {
 public:
+    friend class Filter;
+
     struct Entry {
-        std::vector<RectNode*> nodes;
+        //std::vector<RectNode*> nodes;
+        std::vector<NodeBase*> nodes;
         bool        filled;
         uint32_t    x;
         uint32_t    y;
@@ -22,13 +25,25 @@ public:
         uint8_t     g;
         uint8_t     b;
 
+        float       xInertia;
+        float       yInertia;
+
         Entry(uint32_t x = 0, uint32_t y = 0) :
-            filled(false), x(x), y(y), r(0), g(0), b(0) {}
+            filled(false),
+            x(x), y(y),
+            r(0), g(0), b(0),
+            xInertia(0.0f), yInertia(0.0f) {}
+    };
+
+    enum Type {
+        TYPE_RECT,
+        TYPE_CIRCLE
     };
 
     using Rnd = std::default_random_engine;
 
-    Palette(void);
+    Palette(Type type);
+    Palette(const std::string& fileName);
     ~Palette(void);
 
     Palette(const Palette&)     = delete;
@@ -37,9 +52,10 @@ public:
     Palette& operator=(Palette&&)       = delete;
 
     void addColor(uint8_t r, uint8_t g, uint8_t b);
+    void addColor(uint8_t r, uint8_t g, uint8_t b, uint32_t x, uint32_t y);
 
     void writeNodesCountImg(void) const;
-    void writeImg(void) const;
+    void writeImg(const std::string& fileName = "Palette.png") const;
 
     static double  rGlobal;
     static double  gGlobal;
@@ -48,14 +64,17 @@ public:
 private:
     Rnd                 _r;
     std::vector<Entry>  _data;
-    RectNode*           _root;
+
+    Type                _type;
+    NodeBase*           _root;
 
     uint64_t            _rGlobalSum;
     uint64_t            _gGlobalSum;
     uint64_t            _bGlobalSum;
     uint64_t            _nFreeEntries;
 
-    void addChildNodes(RectNode& node, uint32_t l);
+    void addRectChildNodes(NodeBase& node, uint32_t l);
+    void addCircleChildNodes(NodeBase& node, uint32_t l);
 };
 
 
