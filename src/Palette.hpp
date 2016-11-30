@@ -55,6 +55,7 @@ public:
     void addColor(uint8_t r, uint8_t g, uint8_t b, uint32_t x, uint32_t y);
 
     void writeNodesCountImg(void) const;
+    void writeInertiaImg(const std::string& fileName = "Inertia.png") const;
     void writeImg(const std::string& fileName = "Palette.png") const;
 
     static double  rGlobal;

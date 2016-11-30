@@ -9,6 +9,7 @@ class Filter {
 public:
     static void BoxFilter(Palette& palette);
     static void InertiaFilter(Palette& palette);
+    static void InertiaFilter2(Palette& palette);
 };
 
 

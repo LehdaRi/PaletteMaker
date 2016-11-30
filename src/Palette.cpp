@@ -187,6 +187,30 @@ void Palette::writeNodesCountImg(void) const {
     img.saveToFile("NodesCount.png");
 }
 
+void Palette::writeInertiaImg(const std::string& fileName) const {
+    float minInertia = 0.0f;
+    float maxInertia = 0.0f;
+    for (auto& e : _data) {
+        minInertia = std::min(minInertia, std::min(e.xInertia, e.yInertia));
+        maxInertia = std::max(maxInertia, std::max(e.xInertia, e.yInertia));
+    }
+
+    printf("minInertia: %0.5f, maxInertia: %0.5f\n", minInertia, maxInertia);
+
+    float scale = 255.0f / (maxInertia-minInertia);
+
+    sf::Image img;
+    img.create(4096, 4096);
+
+    for (auto& e : _data) {
+        img.setPixel(e.x, e.y, sf::Color((e.xInertia-minInertia)*scale,
+                                         (e.yInertia-minInertia)*scale,
+                                         0.0f));
+    }
+
+    img.saveToFile(fileName);
+}
+
 void Palette::writeImg(const std::string& fileName) const {
     sf::Image img;
     img.create(4096, 4096);

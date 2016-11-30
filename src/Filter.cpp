@@ -1,6 +1,18 @@
 #include "Filter.hpp"
 
 
+namespace {
+
+    inline uint32_t colorDiff(const Palette::Entry& e1, const Palette::Entry& e2) {
+        int rd = (int)e1.r-(int)e2.r;
+        int gd = (int)e1.g-(int)e2.g;
+        int bd = (int)e1.b-(int)e2.b;
+        return rd*rd + gd*gd + bd*bd;
+    }
+
+}
+
+
 void Filter::BoxFilter(Palette& palette) {
     uint32_t x, y;
     uint64_t minDiff = 4294967296llu;
@@ -166,6 +178,118 @@ void Filter::InertiaFilter(Palette& palette) {
         if ((i+1)%16777216 == 0) {
             printf("Saving img: i=%llu\n", i);
             palette.writeImg("Palette_inertiaFilter.png");
+        }
+    }
+}
+
+void Filter::InertiaFilter2(Palette& palette) {
+    const uint32_t nInitialSamples = 1;
+
+    /*
+    float minInertia = 0.0f;
+    float maxInertia = 0.0f;
+    float maxInertiaf = 0.0f;
+    */
+    uint64_t j=0;
+    for (auto& e : palette._data) {
+        for (auto i=0u; i<nInitialSamples; ++i) {
+            for (auto ix=0u; ix<16; ++ix) {
+                for (auto iy=0u; iy<16; ++iy) {
+                    int xx = (ix*256)+palette._r()%256;
+                    int yy = (iy*256)+palette._r()%256;
+                    auto* e2 = &palette._data[xx+yy*4096];
+                    while(e.x == e2->x && e.y == e2->y) {
+                        xx = (ix*256)+palette._r()%256;
+                        yy = (iy*256)+palette._r()%256;
+                        e2 = &palette._data[xx+yy*4096];
+                    }
+                    auto diff = sqrt(colorDiff(e, *e2));
+                    float inertiaf = (1.0f/diff);//-0.0002f;
+                    e.xInertia += ((float)e2->x-(float)e.x)*inertiaf;
+                    e.yInertia += ((float)e2->y-(float)e.y)*inertiaf;
+                }
+            }
+        }
+        if (++j%4096 == 0)
+            printf("%0.4f\r", j/167772.16);
+    }
+
+    palette.writeInertiaImg();
+
+    int32_t x, y, xs, ys, xsd, ysd;
+    float rd, gd, bd, diff, inertiaf, xi, yi;
+    for (auto i=0llu; i<16777216llu*1024; ++i) {
+        x = palette._r()%4096;
+        y = palette._r()%4096;
+        auto& e = palette._data[y*4096 + x];
+
+        /*for (auto j=0; j<nSamples; ++j) {
+            xsd = 1+palette._r()%filterSize;
+            ysd = 1+palette._r()%filterSize;
+            if (palette._r()%2)
+                xs = x+xsd*xsd;
+            else
+                xs = x-xsd*xsd;
+
+            if (palette._r()%2)
+                ys = y+ysd*ysd;
+            else
+                ys = y-ysd*ysd;
+
+            while (xs < 0 || xs >= 4096 || ys < 0 || ys >= 4096 || (xs == x && ys == y)) {
+                xs = x-256+palette._r()%512;
+                ys = y-256+palette._r()%512;
+            }
+            auto& es = palette._data[ys*4096 + xs];
+            rd = e.r-es.r;
+            gd = e.g-es.g;
+            bd = e.b-es.b;
+            diff = rd*rd + gd*gd + bd*bd;
+            inertiaf = (1.0f/diff)-0.0002f;
+            if (xs-x != 0)
+                e.xInertia += (xs-x)*inertiaf;
+            if (ys-y != 0)
+                e.yInertia += (ys-y)*inertiaf;
+            //if (palette._r() % 12800000 == 0) {
+            //    printf("xs-x: %0.3f, ys-y: %0.3f, inertiaf: %0.6f\n", (float)(xs-x), (float)(ys-y), inertiaf);
+            //    printf("components: [%0.4f, %0.4f]\n", (float)(xs-x)*inertiaf, (ys-y)*inertiaf);
+            //    printf("Inertia: [%0.4f, %0.4f]\n", e.xInertia, e.yInertia);
+            //}
+        }
+
+        e.xInertia *= dampFactor;
+        e.yInertia *= dampFactor;
+
+        if (palette._r() % 1677721 == 0)
+            printf("Inertia: [%0.4f, %0.4f]\n", e.xInertia, e.yInertia);
+        */
+        xi = x+e.xInertia*0.001;
+        yi = y+e.yInertia*0.001;
+        if (xi < 0.0f)      xi = 0.0f;
+        if (xi > 4095.99f)  xi = 4095.99f;
+        if (yi < 0.0f)      yi = 0.0f;
+        if (yi > 4095.99f)  yi = 4095.99f;
+        xs = xi;
+        ys = yi;
+
+        if (xs != x || ys != y) {
+            auto& es = palette._data[ys*4096 + xs];
+            auto esc = es;
+            es.r = e.r;
+            es.g = e.g;
+            es.b = e.b;
+            es.xInertia = e.xInertia;
+            es.yInertia = e.yInertia;
+            e.r = esc.r;
+            e.g = esc.g;
+            e.b = esc.b;
+            e.xInertia = esc.xInertia;
+            e.yInertia = esc.yInertia;
+        }
+
+        if ((i+1)%16777216 == 0) {
+            printf("Saving img: i=%llu\n", i);
+            palette.writeImg("Palette_inertiaFilter2.png");
         }
     }
 }

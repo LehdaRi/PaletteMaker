@@ -8,14 +8,15 @@ inline uint32_t makeColorId(uint8_t r, uint8_t g, uint8_t b) {
 }
 
  void filter(void) {
-    Palette palette("Palette1.png");
+    Palette palette("Palette2b.png");
     //Filter::BoxFilter(palette);
-    Filter::InertiaFilter(palette);
+    //Filter::InertiaFilter(palette);
+    Filter::InertiaFilter2(palette);
  }
 
 int main(void) {
-    //filter();
-    //return 0;
+    filter();
+    return 0;
 
     std::default_random_engine rnd(time(NULL));
 
