@@ -28,11 +28,14 @@ public:
         float       xInertia;
         float       yInertia;
 
+        float       clusterSize;
+
         Entry(uint32_t x = 0, uint32_t y = 0) :
             filled(false),
-            x(x), y(y),
-            r(0), g(0), b(0),
-            xInertia(0.0f), yInertia(0.0f) {}
+            x(x), y(y), r(0), g(0), b(0),
+            xInertia(0.0f), yInertia(0.0f),
+            clusterSize(0.0f)
+            {}
     };
 
     enum Type {

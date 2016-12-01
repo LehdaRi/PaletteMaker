@@ -190,22 +190,29 @@ void Palette::writeNodesCountImg(void) const {
 void Palette::writeInertiaImg(const std::string& fileName) const {
     float minInertia = 0.0f;
     float maxInertia = 0.0f;
+    float minClusterSize = 0.0f;
+    float maxClusterSize = 1.0f;
     for (auto& e : _data) {
         minInertia = std::min(minInertia, std::min(e.xInertia, e.yInertia));
         maxInertia = std::max(maxInertia, std::max(e.xInertia, e.yInertia));
+        minClusterSize = std::min(minClusterSize, std::min(e.clusterSize, e.clusterSize));
+        maxClusterSize = std::max(maxClusterSize, std::max(e.clusterSize, e.clusterSize));
     }
 
     printf("minInertia: %0.5f, maxInertia: %0.5f\n", minInertia, maxInertia);
+    printf("minClusterSize: %0.5f, maxClusterSize: %0.5f\n", minClusterSize, maxClusterSize);
 
-    float scale = 255.0f / (maxInertia-minInertia);
+    float inertiaScale = 255.0f / (maxInertia-minInertia);
+    float clusterSizeScale = 255.0f / (maxClusterSize-minClusterSize);
 
     sf::Image img;
     img.create(4096, 4096);
 
     for (auto& e : _data) {
-        img.setPixel(e.x, e.y, sf::Color((e.xInertia-minInertia)*scale,
-                                         (e.yInertia-minInertia)*scale,
-                                         0.0f));
+        img.setPixel(e.x, e.y, sf::Color((e.xInertia-minInertia)*inertiaScale,
+                                         (e.yInertia-minInertia)*inertiaScale,
+                                         (e.clusterSize-minClusterSize)*clusterSizeScale
+                                         );
     }
 
     img.saveToFile(fileName);

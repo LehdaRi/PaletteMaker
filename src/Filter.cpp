@@ -210,6 +210,11 @@ void Filter::InertiaFilter2(Palette& palette) {
                 }
             }
         }
+
+        //uint32_t minx = std::max();
+
+        //for (int ix=-1; ix<2; ++ix)
+
         if (++j%4096 == 0)
             printf("%0.4f\r", j/167772.16);
     }

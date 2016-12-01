@@ -8,7 +8,7 @@ inline uint32_t makeColorId(uint8_t r, uint8_t g, uint8_t b) {
 }
 
  void filter(void) {
-    Palette palette("Palette2b.png");
+    Palette palette("Palette.png");
     //Filter::BoxFilter(palette);
     //Filter::InertiaFilter(palette);
     Filter::InertiaFilter2(palette);
@@ -25,7 +25,7 @@ int main(void) {
 
     Palette palette(Palette::TYPE_CIRCLE);
 
-    palette.writeNodesCountImg();
+    //palette.writeNodesCountImg();
 
     uint8_t r, g, b;
     uint32_t cid;
@@ -45,25 +45,60 @@ int main(void) {
     colors[makeColorId(0, 0, 255)] = true;
     palette.addColor(255, 0, 255, 2884, 600);
     colors[makeColorId(255, 0, 255)] = true;
-
     auto i=7u;
-    for (auto j=0u; j<128; ++j) {
-        palette.addColor(255-j, 255-j, 255-j);
-        colors[makeColorId(255-j, 255-j, 255-j)] = true;
-        palette.addColor(255-j, 0, 0);
-        colors[makeColorId(255-j, 0, 0)] = true;
-        palette.addColor(255-j, 255-j, 0);
-        colors[makeColorId(255-j, 255-j, 0)] = true;
-        palette.addColor(0, 255-j, 0);
-        colors[makeColorId(0, 255-j, 0)] = true;
-        palette.addColor(0, 255-j, 255-j);
-        colors[makeColorId(0, 255-j, 255-j)] = true;
-        palette.addColor(0, 0, 255-j);
-        colors[makeColorId(0, 0, 255-j)] = true;
-        palette.addColor(255-j, 0, 255-j);
-        colors[makeColorId(255-j, 0, 255-j)] = true;
+
+    auto k=0;
+    for (auto j=1u; j<140 && i<16777216; ++k) {
+        cid = makeColorId(255-(rnd()%(j+1)), 255-(rnd()%(j+1)), 255-(rnd()%(j+1)));
+        while (colors[cid])
+            cid = makeColorId(255-(rnd()%(j+1)), 255-(rnd()%(j+1)), 255-(rnd()%(j+1)));
+        palette.addColor(cid & 0xff, (cid >> 8) & 0xff, (cid >> 16) & 0xff);
+        colors[cid] = true;
+
+        cid = makeColorId(255-(rnd()%(j+1)), rnd()%(j+1), rnd()%(j+1));
+        while (colors[cid])
+            cid = makeColorId(255-(rnd()%(j+1)), rnd()%(j+1), rnd()%(j+1));
+        palette.addColor(cid & 0xff, (cid >> 8) & 0xff, (cid >> 16) & 0xff);
+        colors[cid] = true;
+
+        cid = makeColorId(rnd()%(j+1), 255-(rnd()%(j+1)), rnd()%(j+1));
+        while (colors[cid])
+            cid = makeColorId(rnd()%(j+1), 255-(rnd()%(j+1)), rnd()%(j+1));
+        palette.addColor(cid & 0xff, (cid >> 8) & 0xff, (cid >> 16) & 0xff);
+        colors[cid] = true;
+
+        cid = makeColorId(rnd()%(j+1), rnd()%(j+1), 255-(rnd()%(j+1)));
+        while (colors[cid])
+            cid = makeColorId(rnd()%(j+1), rnd()%(j+1), 255-(rnd()%(j+1)));
+        palette.addColor(cid & 0xff, (cid >> 8) & 0xff, (cid >> 16) & 0xff);
+        colors[cid] = true;
+
+        cid = makeColorId(255-(rnd()%(j+1)), 255-(rnd()%(j+1)), rnd()%(j+1));
+        while (colors[cid])
+            cid = makeColorId(255-(rnd()%(j+1)), 255-(rnd()%(j+1)), rnd()%(j+1));
+        palette.addColor(cid & 0xff, (cid >> 8) & 0xff, (cid >> 16) & 0xff);
+        colors[cid] = true;
+
+        cid = makeColorId(rnd()%(j+1), 255-(rnd()%(j+1)), 255-(rnd()%(j+1)));
+        while (colors[cid])
+            cid = makeColorId(rnd()%(j+1), 255-(rnd()%(j+1)), 255-(rnd()%(j+1)));
+        palette.addColor(cid & 0xff, (cid >> 8) & 0xff, (cid >> 16) & 0xff);
+        colors[cid] = true;
+
+        cid = makeColorId(255-(rnd()%(j+1)), rnd()%(j+1), 255-(rnd()%(j+1)));
+        while (colors[cid])
+            cid = makeColorId(255-(rnd()%(j+1)), rnd()%(j+1), 255-(rnd()%(j+1)));
+        palette.addColor(cid & 0xff, (cid >> 8) & 0xff, (cid >> 16) & 0xff);
+        colors[cid] = true;
+
+        if (k>2*j*j) {
+            k=0;
+            ++j;
+        }
+
         i += 7;
-        printf("%0.4f\r", (i*100.0)/16777216);
+        if (i%14000 == 0)
+            printf("i: %llu, j: %u, k: %u, %0.4f\r", i, j, k, (i*100.0)/16777216);
     }
 
     for (; i<16777216; ++i) {
