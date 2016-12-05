@@ -212,7 +212,7 @@ void Palette::writeInertiaImg(const std::string& fileName) const {
         img.setPixel(e.x, e.y, sf::Color((e.xInertia-minInertia)*inertiaScale,
                                          (e.yInertia-minInertia)*inertiaScale,
                                          (e.clusterSize-minClusterSize)*clusterSizeScale
-                                         );
+                                         ));
     }
 
     img.saveToFile(fileName);

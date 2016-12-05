@@ -184,6 +184,7 @@ void Filter::InertiaFilter(Palette& palette) {
 
 void Filter::InertiaFilter2(Palette& palette) {
     const uint32_t nInitialSamples = 1;
+    const int clusterFilterSize = 2;
 
     /*
     float minInertia = 0.0f;
@@ -192,6 +193,7 @@ void Filter::InertiaFilter2(Palette& palette) {
     */
     uint64_t j=0;
     for (auto& e : palette._data) {
+        /*
         for (auto i=0u; i<nInitialSamples; ++i) {
             for (auto ix=0u; ix<16; ++ix) {
                 for (auto iy=0u; iy<16; ++iy) {
@@ -210,16 +212,42 @@ void Filter::InertiaFilter2(Palette& palette) {
                 }
             }
         }
+        */
+    }
 
-        //uint32_t minx = std::max();
+    std::vector<float> tdiff(16777216, 0.0f);
 
-        //for (int ix=-1; ix<2; ++ix)
+    for (auto& e : palette._data) {
+        int miny = std::max((int)e.y-clusterFilterSize, 0);
+        int maxy = std::min((int)e.y+clusterFilterSize+1, 4096);
+
+        for (int iy=miny; iy<maxy; ++iy) {
+            auto* e2 = &palette._data[e.x + iy*4096];
+            tdiff[e.x + iy*4096] += sqrt(colorDiff(e, *e2));
+            //e.clusterSize += diff;
+        }
+    }
+
+    for (auto& e : palette._data) {
+        int minx = std::max((int)e.x-clusterFilterSize, 0);
+        int maxx = std::min((int)e.x+clusterFilterSize+1, 4096);
+
+        for (int ix=minx; ix<maxx; ++ix) {
+            auto* e2 = &palette._data[ix + e.y*4096];
+            float diff = fabs(e.clusterSize - tdiff[ix + e.y*4096);
+            if (diff > 10000.0f)
+                printf("diff: %0.3f, e.clusterSize: %0.3f, e2->clusterSize: %0.3f\n", diff, e.clusterSize, e2->clusterSize);
+            e.clusterSize += diff;
+            //if (e.clusterSize > 10000.0f)
+                //printf("e.clusterSize: %0.3f\n", e.clusterSize);
+        }
 
         if (++j%4096 == 0)
             printf("%0.4f\r", j/167772.16);
     }
 
     palette.writeInertiaImg();
+    return;
 
     int32_t x, y, xs, ys, xsd, ysd;
     float rd, gd, bd, diff, inertiaf, xi, yi;
